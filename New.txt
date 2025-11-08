@@ -1,0 +1,370 @@
+CODE :- 
+-- ✅ 1. Create Database and Use it
+CREATE DATABASE bankdb;
+USE bankdb;
+
+-- ✅ 2. Create Customer Table
+CREATE TABLE Customer (
+  C_id INT PRIMARY KEY,
+  C_name VARCHAR(50),
+  City VARCHAR(50)
+);
+
+-- ✅ 3. Create Account Table
+CREATE TABLE Account (
+  Acc_id INT PRIMARY KEY,
+  C_id INT,
+  Acc_Type VARCHAR(20),
+  Amount INT,
+  FOREIGN KEY (C_id) REFERENCES Customer(C_id)
+);
+
+-- ✅ 4. Insert Data into Customer Table
+INSERT INTO Customer VALUES
+(1, 'Pooja', 'Pune'),
+(2, 'John', 'Aurangabad'),
+(3, 'Seema', 'Nashik'),
+(4, 'Rakesh', 'Pune'),
+(5, 'Sanjana', 'Chandwad'),
+(6, 'Bhavika', 'Pune'),
+(7, 'Deepa', 'Mumbai'),
+(8, 'Nitin', 'Nagpur'),
+(9, 'Rutuja', 'Pune'),
+(10, 'Nikhil', 'Pune');
+
+-- ✅ 5. Insert Data into Account Table
+INSERT INTO Account VALUES
+(1, 1, 'Saving', 50000),
+(2, 2, 'Current', 20000),
+(3, 3, 'Saving', 30000),
+(4, 4, 'Saving', 75000),
+(5, 5, 'Saving', 35000),
+(6, 6, 'Current', 50000),
+(7, 7, 'Loan', 90000),
+(8, 8, 'Saving', 80000),
+(9, 9, 'Saving', 10000),
+(10,10, 'Current', 45000);
+
+-- ✅ Check the tables
+SELECT * FROM Customer;
+SELECT * FROM Account;
+
+-----------------------------------------------------------
+-- 🔹 QUERY 1:
+-- Show the cname, Acc_Type, amount information of customer who is having a saving account.
+-----------------------------------------------------------
+SELECT c.C_name, a.Acc_Type, a.Amount
+FROM Customer c
+JOIN Account a ON c.C_id = a.C_id
+WHERE a.Acc_Type = 'Saving';
+
+-----------------------------------------------------------
+-- 🔹 QUERY 2:
+-- Display the data using NATURAL JOIN, LEFT JOIN and RIGHT JOIN.
+-----------------------------------------------------------
+
+-- NATURAL JOIN
+SELECT * FROM Customer NATURAL JOIN Account;
+
+-- LEFT JOIN
+SELECT c.C_id, c.C_name, c.City, a.Acc_id, a.Acc_Type, a.Amount
+FROM Customer c
+LEFT JOIN Account a ON c.C_id = a.C_id;
+
+-- RIGHT JOIN
+SELECT c.C_id, c.C_name, c.City, a.Acc_id, a.Acc_Type, a.Amount
+FROM Customer c
+RIGHT JOIN Account a ON c.C_id = a.C_id;
+
+-----------------------------------------------------------
+-- 🔹 QUERY 3:
+-- Display the information of customers living in the same city as of 'Pooja'.
+-----------------------------------------------------------
+SELECT * FROM Customer
+WHERE City = (SELECT City FROM Customer WHERE C_name = 'Pooja');
+
+-----------------------------------------------------------
+-- 🔹 QUERY 4:
+-- Display the information of account having less amount than average amount throughout the bank.
+-----------------------------------------------------------
+SELECT * FROM Account
+WHERE Amount < (SELECT AVG(Amount) FROM Account);
+
+-----------------------------------------------------------
+-- 🔹 QUERY 5:
+-- Display the C_id having maximum and minimum amount in account.
+-----------------------------------------------------------
+
+-- Maximum
+SELECT C_id, Amount 
+FROM Account 
+WHERE Amount = (SELECT MAX(Amount) FROM Account);
+
+-- Minimum
+SELECT C_id, Amount 
+FROM Account 
+WHERE Amount = (SELECT MIN(Amount) FROM Account);
+
+-----------------------------------------------------------
+-- 🔹 QUERY 6:
+-- Display the amount and acc_type of those customers whose amount 
+-- is the minimum amount of that acc_type.
+-----------------------------------------------------------
+SELECT a.Acc_Type, a.Amount, c.C_name
+FROM Account a
+JOIN Customer c ON a.C_id = c.C_id
+WHERE a.Amount = (
+  SELECT MIN(a2.Amount)
+  FROM Account a2
+  WHERE a2.Acc_Type = a.Acc_Type
+);
+
+-----------------------------------------------------------
+-- 🔹 QUERY 7:
+-- Display the amount of those accounts whose amount is higher than 
+-- amount of any saving account amount.
+-----------------------------------------------------------
+
+-- Using > ALL (higher than all saving account amounts)
+SELECT * FROM Account
+WHERE Amount > ALL (
+  SELECT Amount FROM Account WHERE Acc_Type = 'Saving'
+);
+
+
+
+
+
+
+
+
+
+
+Explanation :- 
+1) Create the database and tables (run these lines in order)
+-- 1. Create database and use it
+CREATE DATABASE bankdb;
+USE bankdb;
+
+-- 2. Create Customer table
+CREATE TABLE Customer (
+  C_id INT PRIMARY KEY,
+  C_name VARCHAR(50),
+  City VARCHAR(50)
+);
+
+-- 3. Create Account table
+CREATE TABLE Account (
+  Acc_id INT PRIMARY KEY,
+  C_id INT,
+  Acc_Type VARCHAR(20),
+  Amount INT,
+  FOREIGN KEY (C_id) REFERENCES Customer(C_id)
+);
+
+
+2) Insert sample rows (these are the rows I used for the examples below)
+-- Insert customers (10 customers)
+INSERT INTO Customer VALUES
+(1, 'Pooja', 'Pune'),
+(2, 'John', 'Aurangabad'),
+(3, 'Seema', 'Nashik'),
+(4, 'Rakesh', 'Pune'),
+(5, 'Sanjana', 'Chandwad'),
+(6, 'Bhavika', 'Pune'),
+(7, 'Deepa', 'Mumbai'),
+(8, 'Nitin', 'Nagpur'),
+(9, 'Rutuja', 'Pune'),
+(10, 'Nikhil', 'Pune');
+
+-- Insert account rows (Acc_id, C_id, Acc_Type, Amount)
+INSERT INTO Account VALUES
+(1, 1, 'Saving', 50000),
+(2, 2, 'Current', 20000),
+(3, 3, 'Saving', 30000),
+(4, 4, 'Saving', 75000),
+(5, 5, 'Saving', 35000),
+(6, 6, 'Current', 50000),
+(7, 7, 'Loan', 90000),
+(8, 8, 'Saving', 80000),
+(9, 9, 'Saving', 10000),
+(10,10, 'Current', 45000);
+
+(You can SELECT * FROM Customer; and SELECT * FROM Account; to verify the inserted rows.)
+
+3) Now the queries from your assignment (with the SQL and the expected output using the dataset above)
+Query 1 — “Show the cname, Acc_Type, amount information of customer who is having a saving account.”
+SELECT c.C_name, a.Acc_Type, a.Amount
+FROM Customer c
+JOIN Account a ON c.C_id = a.C_id
+WHERE a.Acc_Type = 'Saving';
+
+Expected result table:
+C_nameAcc_TypeAmountPoojaSaving50000SeemaSaving30000RakeshSaving75000SanjanaSaving35000NitinSaving80000RutujaSaving10000
+
+Query 2 — “Display the data using NATURAL, LEFT and RIGHT JOIN”
+(Your picture asked to show NATURAL JOIN, LEFT JOIN and RIGHT JOIN — I’ll give one example of each.)
+-- (a) NATURAL JOIN (works only if columns have same names and types; here we have C_id in both)
+SELECT * FROM Customer NATURAL JOIN Account;
+
+Expected NATURAL JOIN result (equivalent to JOIN ON Customer.C_id = Account.C_id):
+C_idC_nameCityAcc_idAcc_TypeAmount1PoojaPune1Saving500002JohnAurangabad2Current200003SeemaNashik3Saving300004RakeshPune4Saving750005SanjanaChandwad5Saving350006BhavikaPune6Current500007DeepaMumbai7Loan900008NitinNagpur8Saving800009RutujaPune9Saving1000010NikhilPune10Current45000
+-- (b) LEFT JOIN (all customers even if they have no account)
+SELECT c.C_id, c.C_name, c.City, a.Acc_id, a.Acc_Type, a.Amount
+FROM Customer c
+LEFT JOIN Account a ON c.C_id = a.C_id;
+
+LEFT JOIN output — with our dataset every customer has an account, so LEFT JOIN result equals NATURAL JOIN result shown above.
+-- (c) RIGHT JOIN (all accounts even if there is no matching customer)
+SELECT c.C_id, c.C_name, c.City, a.Acc_id, a.Acc_Type, a.Amount
+FROM Customer c
+RIGHT JOIN Account a ON c.C_id = a.C_id;
+
+RIGHT JOIN output — again equal to the NATURAL JOIN output because every account references an existing customer.
+
+Query 3 — “Display the information of customers living in the same city as 'pooja'.”
+We find Pooja’s city with a subquery and list all customers from that city (optionally exclude Pooja).
+-- Include Pooja as well:
+SELECT * FROM Customer
+WHERE City = (SELECT City FROM Customer WHERE C_name = 'Pooja');
+
+-- Or exclude Pooja:
+SELECT * FROM Customer
+WHERE City = (SELECT City FROM Customer WHERE C_name = 'Pooja')
+  AND C_name <> 'Pooja';
+
+Pooja's city = 'Pune' (from the dataset).
+Result (including Pooja):
+C_idC_nameCity1PoojaPune4RakeshPune6BhavikaPune9RutujaPune10NikhilPune
+
+Query 4 — “Display the information of account having less amount than average amount throughout the bank.”
+Use AVG in a subquery:
+SELECT a.*
+FROM Account a
+WHERE a.Amount < (SELECT AVG(Amount) FROM Account);
+
+Calculate average from the dataset:
+Sum = 485000, count=10 → AVG = 48500.
+Expected rows (amount < 48500): Acc_id 2,3,5,9,10
+Acc_idC_idAcc_TypeAmount22Current2000033Saving3000055Saving3500099Saving100001010Current45000
+
+Query 5 — “Display the C_id having maximum and minimum amount in account.”
+Two ways — single query using subqueries, or two separate selects.
+-- Max
+SELECT C_id, Amount FROM Account
+WHERE Amount = (SELECT MAX(Amount) FROM Account);
+
+-- Min
+SELECT C_id, Amount FROM Account
+WHERE Amount = (SELECT MIN(Amount) FROM Account);
+
+Expected results:
+Max:
+C_idAmount790000
+Min:
+C_idAmount910000
+(If you want both in one result set with labels:)
+SELECT 'MAX' AS which, C_id, Amount FROM Account WHERE Amount = (SELECT MAX(Amount) FROM Account)
+UNION ALL
+SELECT 'MIN' AS which, C_id, Amount FROM Account WHERE Amount = (SELECT MIN(Amount) FROM Account);
+
+
+Query 6 — “Display the amount and acc_type of those customers whose amount is the minimum amount of that acc_type.”
+(For each account type, show rows having the minimum amount in that type.)
+SELECT a.Acc_Type, a.Amount, a.Acc_id, c.C_name
+FROM Account a
+JOIN Customer c ON a.C_id = c.C_id
+WHERE a.Amount = (
+  SELECT MIN(a2.Amount)
+  FROM Account a2
+  WHERE a2.Acc_Type = a.Acc_Type
+);
+
+Compute per type using dataset:
+
+
+Saving amounts: [50000, 30000, 75000, 35000, 80000, 10000] → min = 10000 (Acc 9)
+
+
+Current amounts: [20000, 50000, 45000] → min = 20000 (Acc 2)
+
+
+Loan amounts: [90000] → min = 90000 (Acc 7)
+
+
+Expected result:
+Acc_TypeAmountAcc_idC_nameSaving100009RutujaCurrent200002JohnLoan900007Deepa
+
+Query 7 — “Display the amount of those accounts whose amount is higher than amount of any saving account amount.”
+This is ambiguous in plain English. Two interpretations:
+
+
+Interpretation A (higher than any saving account) means Amount > ANY (saving amounts) — that is satisfied if the account amount is greater than at least one saving-account amount (which is true for most accounts).
+
+
+Interpretation B (higher than all saving accounts) means Amount > ALL (saving amounts) — i.e., higher than every saving amount (strictly greater than the maximum saving).
+
+
+I’ll give both queries and their results.
+-- A) > ANY (greater than at least one saving account)
+SELECT Acc_id, C_id, Acc_Type, Amount
+FROM Account
+WHERE Amount > ANY (
+  SELECT Amount FROM Account WHERE Acc_Type = 'Saving'
+);
+
+-- B) > ALL (greater than all saving accounts i.e., greater than the max saving)
+SELECT Acc_id, C_id, Acc_Type, Amount
+FROM Account
+WHERE Amount > ALL (
+  SELECT Amount FROM Account WHERE Acc_Type = 'Saving'
+);
+
+From the dataset saving amounts: [50000,30000,75000,35000,80000,10000], maximum saving = 80000.
+
+
+Result A (> ANY): returns ALL accounts whose amount > at least one saving amount. That is every account except those that are ≤ every saving amount (practically almost all). Concretely, amounts 20000,30000,... Most rows satisfy because at least one saving (10000) is small. So result A returns rows with amounts: 50000,20000,30000,75000,35000,50000,90000,80000,45000 (i.e., all except the saving 10000 itself if it is NOT greater than any saving? 10000 > ANY(saving)? 10000 > ANY? No because ANY contains 10000 itself; 10000 > ANY(saving amounts) is false). So everything except Acc 9 shows up.
+
+
+Result B (> ALL): amounts strictly greater than 80000 (max saving) → only amount 90000 (Acc 7).
+
+
+Result B table (clear result):
+Acc_idC_idAcc_TypeAmount77Loan90000
+
+How to run these commands
+
+
+Open MySQL client (or phpMyAdmin).
+
+
+Paste the CREATE DATABASE and USE lines first.
+
+
+Paste the CREATE TABLE statements.
+
+
+Paste the INSERT statements.
+
+
+Run each SELECT query to see output.
+
+
+If you use command line:
+mysql -u root -p
+mysql> source /path/to/script.sql;   -- if you save all SQL into a file
+
+
+Summary / Notes
+
+
+I used a concrete dataset of 10 customers and 10 accounts so you can see exact outputs for each query.
+
+
+If you want me to use the exact rows from the picture, paste the customer & account rows (or let me crop/ocr the image) and I’ll re-run the same SQL with those exact values and give the precise outputs.
+
+
+If any of the queries in your sheet have slightly different wording (e.g., Query 7 intended > ANY vs > ALL), tell me which interpretation you want and I’ll show only that.
+
+
+Want me to: (A) adapt the SQL to exactly match the rows visible in your photo, or (B) produce a downloadable .sql file you can run directly?
