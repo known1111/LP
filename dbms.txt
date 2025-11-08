@@ -1,0 +1,1162 @@
+/* 1.	Create following tables with primary and foreign key and solve the queries given below
+
+Person (driver_id, name, address)
+
+Car (license, model, year)
+
+Accident (report_no, date_acc, location)
+
+Owns (driver_id, license)
+
+Participated (driver_id,  model,  report_no, damage_amount)
+
+1.	Insert records into each table
+
+2.	Create a view named Driver_Car_View to show each driver’s name and the car model they own.
+
+3.	Display all records from the Driver_Car_View.
+
+4.	Modify the existing view Driver_Car_View to include the car’s year of manufacture.
+
+5.	Create a sequence named seq_report_no starting from 6001 and increment by 5 for new accidents.
+
+6.	Create a composite index on model and year columns of the Car table.
+
+a.	Create a view to show all drivers who participated in accidents with damage amount greater than ₹20,000.
+
+7.	Create a sequence named seq_driver_id to auto-generate driver IDs starting from 201 and increment by 1.
+
+8.	Insert a new record into Person using the Sequence.
+
+9.	Create an index on the name column of the Person table for faster searching.
+
+10.	Drop the index created on name column of Person.
+
+11.	Create a view named Recent_Accidents that shows accidents that occurred in the year 2025.
+
+12.	Drop the view Recent_Accidents.
+
+13.	Create a synonym named acc_info for the Accident table.
+
+14.	Insert a new accident record using the acc_info synonym.
+
+15.	Create a unique index on license column of the Car table.   
+
+16.	Create a view to display all drivers who own cars manufactured after 2019.
+
+17.	Create a sequence to generate accident report numbers automatically and use it in an INSERT statement.
+
+18.	Create a synonym for the Owns table and use it to list all driver–car pairs.
+
+19.	Create an index to improve the performance of queries filtering by damage_amount
+
+*/ 
+
+
+
+-- Drop existing tables if re-running the script
+
+create database db;
+
+USE db;
+
+DROP TABLE IF EXISTS Participated;
+
+DROP TABLE IF EXISTS Owns;
+
+DROP TABLE IF EXISTS Accident;
+
+DROP TABLE IF EXISTS Car;
+
+DROP TABLE IF EXISTS Person;
+
+
+
+-- Create Person table
+
+CREATE TABLE Person (
+
+    driver_id INT AUTO_INCREMENT PRIMARY KEY,
+
+    name VARCHAR(50),
+
+    address VARCHAR(100)
+
+);
+
+
+
+-- Create Car table
+
+CREATE TABLE Car (
+
+    license VARCHAR(20) PRIMARY KEY,
+
+    model VARCHAR(50),
+
+    year INT
+
+);
+
+
+
+-- Create Accident table
+
+CREATE TABLE Accident (
+
+    report_no INT AUTO_INCREMENT PRIMARY KEY,
+
+    date_acc DATE,
+
+    location VARCHAR(100)
+
+);
+
+
+
+-- Create Owns table
+
+CREATE TABLE Owns (
+
+    driver_id INT,
+
+    license VARCHAR(20),
+
+    PRIMARY KEY (driver_id, license),
+
+    FOREIGN KEY (driver_id) REFERENCES Person(driver_id),
+
+    FOREIGN KEY (license) REFERENCES Car(license)
+
+);
+
+
+
+-- Create Participated table
+
+CREATE TABLE Participated (
+
+    driver_id INT,
+
+    model VARCHAR(50),
+
+    report_no INT,
+
+    damage_amount DECIMAL(10,2),
+
+    FOREIGN KEY (driver_id) REFERENCES Person(driver_id),
+
+    FOREIGN KEY (report_no) REFERENCES Accident(report_no)
+
+);
+
+
+
+-- Insert data into Person
+
+INSERT INTO Person (driver_id, name, address) VALUES
+
+(201, 'Rahul Sharma', 'Delhi'),
+
+(202, 'Priya Verma', 'Mumbai'),
+
+(203, 'Amit Patel', 'Ahmedabad');
+
+
+
+-- Insert data into Car
+
+INSERT INTO Car VALUES
+
+('DL01AB1234', 'Hyundai i20', 2020),
+
+('MH12CD5678', 'Honda City', 2018),
+
+('GJ05EF4321', 'Tata Nexon', 2022);
+
+
+
+-- Insert data into Accident
+
+INSERT INTO Accident (report_no, date_acc, location) VALUES
+
+(6001, '2025-01-10', 'Delhi'),
+
+(6006, '2025-03-12', 'Mumbai'),
+
+(6011, '2024-11-05', 'Ahmedabad');
+
+
+
+-- Insert data into Owns
+
+INSERT INTO Owns VALUES
+
+(201, 'DL01AB1234'),
+
+(202, 'MH12CD5678'),
+
+(203, 'GJ05EF4321');
+
+
+
+-- Insert data into Participated
+
+INSERT INTO Participated VALUES
+
+(201, 'Hyundai i20', 6001, 15000.00),
+
+(202, 'Honda City', 6006, 25000.00),
+
+(203, 'Tata Nexon', 6011, 18000.00);
+
+
+
+-- Create views
+
+CREATE OR REPLACE VIEW Driver_Car_View AS
+
+SELECT p.name, c.model, c.year
+
+FROM Person p
+
+JOIN Owns o ON p.driver_id = o.driver_id
+
+JOIN Car c ON o.license = c.license;
+
+
+
+-- Create another view for high-damage drivers
+
+CREATE OR REPLACE VIEW High_Damage_Drivers AS
+
+SELECT p.name, pa.damage_amount
+
+FROM Person p
+
+JOIN Participated pa ON p.driver_id = pa.driver_id
+
+WHERE pa.damage_amount > 20000;
+
+
+
+-- Add a new person (AUTO_INCREMENT handles driver_id)
+
+INSERT INTO Person (name, address)
+
+VALUES ('Neha Singh', 'Bangalore');
+
+
+
+-- Create indexes
+
+CREATE INDEX idx_car_model_year ON Car(model, year);
+
+CREATE UNIQUE INDEX idx_car_license_unique ON Car(license);
+
+CREATE INDEX idx_participated_damage ON Participated(damage_amount);
+
+
+
+-- Create a simple view for recent accidents (2025)
+
+CREATE OR REPLACE VIEW Recent_Accidents AS
+
+SELECT * FROM Accident
+
+WHERE YEAR(date_acc) = 2025;
+
+
+
+-- Create a view for new car drivers
+
+CREATE OR REPLACE VIEW New_Car_Drivers AS
+
+SELECT p.name, c.model, c.year
+
+FROM Person p
+
+JOIN Owns o ON p.driver_id = o.driver_id
+
+JOIN Car c ON o.license = c.license
+
+WHERE c.year > 2019;
+
+
+
+-- Create another view for Owns table
+
+CREATE OR REPLACE VIEW owns_info AS SELECT * FROM Owns;
+
+
+
+-- Query to check joined data
+
+SELECT p.name, c.model
+
+FROM owns_info o
+
+JOIN Person p ON o.driver_id = p.driver_id
+
+JOIN Car c ON o.license = c.license;
+
+
+
+
+
+/* 2.	Unnamed PL/SQL code block: Use of Control structure and Exception handling is mandatory.
+
+Write a PL/SQL block of code for the following requirements:- Consider table Stud(Roll, Att,Status) 
+
+Write a PL/SQL block for following requirement and handle the exceptions. Roll no. of student will be entered by user.
+
+Attendance of roll no. entered by user will be checked in Stud table. If attendance is less than 75% then display the message
+
+“Term not granted” and set the status in stud table as “D”. Otherwise display message “Term granted” and set the status in stud table as “ND” 
+
+*/ 
+
+
+
+// Database Stud
+
+CREATE TABLE Stud (
+
+    Roll NUMBER PRIMARY KEY,
+
+    Name VARCHAR2(50),
+
+    Att NUMBER,
+
+    Status CHAR(2)
+
+);
+
+
+
+INSERT INTO Stud VALUES (101, 'Rahul', 82, NULL);
+
+INSERT INTO Stud VALUES (102, 'Priya', 65, NULL);
+
+COMMIT;
+
+// database Stud complete here 
+
+
+
+SET SERVEROUTPUT ON;
+
+
+
+DECLARE
+
+    v_roll   NUMBER;
+
+    v_att    NUMBER;
+
+BEGIN
+
+    v_roll := &Roll;
+
+
+
+    SELECT att INTO v_att 
+
+    FROM Stud 
+
+    WHERE Roll = v_roll;
+
+
+
+    IF v_att < 75 THEN
+
+        DBMS_OUTPUT.PUT_LINE('Term not granted');
+
+        UPDATE Stud
+
+        SET Status = 'D'
+
+        WHERE Roll = v_roll;
+
+    ELSE
+
+        DBMS_OUTPUT.PUT_LINE('Term granted');
+
+        UPDATE Stud
+
+        SET Status = 'ND'
+
+        WHERE Roll = v_roll;
+
+    END IF;
+
+
+
+    COMMIT;
+
+
+
+EXCEPTION
+
+    WHEN NO_DATA_FOUND THEN
+
+        DBMS_OUTPUT.PUT_LINE('Error: Roll number not found in Stud table.');
+
+    WHEN OTHERS THEN
+
+        DBMS_OUTPUT.PUT_LINE('An unexpected error occurred: ' || SQLERRM);
+
+END;
+
+/
+
+
+
+
+
+
+
+/* 3.	Create Customer and Account table and add rows shown below 
+
+1. Show the cname, Acc_Type, amount information of customer who is having an saving account.
+
+2. Display the data using Natural, left and right join.
+
+3. Display the information of customers living in the same city as of ‘pooja’.
+
+4. Display the information of account, having less amount than average amount throughout the bank.
+
+5. Display the C_id having maximum amount in account.
+
+6. Display the amount and acc_type of those customers whose amount is the minimum amount of that Acc_type.
+
+7. Display the amount of those accounts whose amount is higher than amount of any saving account amount.
+
+*/
+
+
+
+create database db1;
+
+USE db1;
+
+
+
+-- Drop tables if re-running the script
+
+DROP TABLE IF EXISTS Account;
+
+DROP TABLE IF EXISTS Customer;
+
+
+
+-- Step 1: Create Tables
+
+CREATE TABLE Customer (
+
+    C_id INT PRIMARY KEY,
+
+    Cname VARCHAR(50),
+
+    City VARCHAR(50)
+
+);
+
+
+
+CREATE TABLE Account (
+
+    Acc_no INT PRIMARY KEY,
+
+    C_id INT,
+
+    Acc_Type VARCHAR(20),
+
+    Amount DECIMAL(10,2),
+
+    FOREIGN KEY (C_id) REFERENCES Customer(C_id)
+
+);
+
+
+
+-- Step 2: Insert Data
+
+INSERT INTO Customer VALUES 
+
+(1, 'Pooja', 'Pune'),
+
+(2, 'Rahul', 'Pune'),
+
+(3, 'Neha', 'Mumbai'),
+
+(4, 'Amit', 'Delhi'),
+
+(5, 'Priya', 'Pune');
+
+
+
+INSERT INTO Account VALUES
+
+(101, 1, 'Saving', 25000),
+
+(102, 2, 'Current', 50000),
+
+(103, 3, 'Saving', 15000),
+
+(104, 4, 'Saving', 40000),
+
+(105, 5, 'Current', 20000);
+
+
+
+COMMIT;
+
+
+
+------------------------------------------------------
+
+-- 🔹 QUERY 1: Show cname, Acc_Type, amount of customers having Saving account
+
+------------------------------------------------------
+
+SELECT c.Cname, a.Acc_Type, a.Amount
+
+FROM Customer c
+
+JOIN Account a ON c.C_id = a.C_id
+
+WHERE a.Acc_Type = 'Saving';
+
+
+
+------------------------------------------------------
+
+-- 🔹 QUERY 2: Display the data using Natural, Left and Right Join
+
+------------------------------------------------------
+
+-- Natural Join
+
+SELECT * 
+
+FROM Customer NATURAL JOIN Account;
+
+
+
+-- Left Join
+
+SELECT * 
+
+FROM Customer c
+
+LEFT JOIN Account a ON c.C_id = a.C_id;
+
+
+
+-- Right Join
+
+SELECT * 
+
+FROM Customer c
+
+RIGHT JOIN Account a ON c.C_id = a.C_id;
+
+
+
+------------------------------------------------------
+
+-- 🔹 QUERY 3: Customers living in same city as 'Pooja'
+
+------------------------------------------------------
+
+SELECT * 
+
+FROM Customer
+
+WHERE City = (
+
+    SELECT City FROM Customer WHERE Cname = 'Pooja'
+
+);
+
+
+
+------------------------------------------------------
+
+-- 🔹 QUERY 4: Accounts having less amount than average amount
+
+------------------------------------------------------
+
+SELECT * 
+
+FROM Account
+
+WHERE Amount < (SELECT AVG(Amount) FROM Account);
+
+
+
+------------------------------------------------------
+
+-- 🔹 QUERY 5: C_id having maximum amount
+
+------------------------------------------------------
+
+SELECT C_id
+
+FROM Account
+
+WHERE Amount = (SELECT MAX(Amount) FROM Account);
+
+
+
+------------------------------------------------------
+
+-- 🔹 QUERY 6: Amount and Acc_Type of customers whose amount 
+
+--             is minimum for that Acc_Type
+
+------------------------------------------------------
+
+SELECT Acc_Type, Amount
+
+FROM Account a
+
+WHERE Amount = (
+
+    SELECT MIN(Amount)
+
+    FROM Account
+
+    WHERE Acc_Type = a.Acc_Type
+
+);
+
+
+
+------------------------------------------------------
+
+-- 🔹 QUERY 7: Accounts whose amount is higher than 
+
+--             any Saving account amount
+
+------------------------------------------------------
+
+SELECT *
+
+FROM Account
+
+WHERE Amount > ANY (
+
+    SELECT Amount FROM Account WHERE Acc_Type = 'Saving'
+
+);
+
+
+
+
+
+/* 4.Unnamed PL/SQL code block: Use of Control structure and Exception handling is mandatory. 
+
+Write a PL/SQL block of code for the following requirements:- 
+
+Schema: 
+
+1. Borrower(Rollin, Name, DateofIssue, NameofBook, Status) 
+
+2. Fine(Roll_no,Date,Amt) 
+
+Accept roll_no & name of book from user. 
+
+Check the number of days (from date of issue), if days are between 15 to 30 then fine 
+
+amount will be Rs 5per day. 
+
+If no. of days>30, per day fine will be Rs 50 per day & for days less than 30, Rs. 5 per day. 
+
+After submitting the book, status will change from I to R. 
+
+If condition of fine is true, then details will be stored into fine table. 
+
+*/
+
+
+
+-- Drop tables if re-running
+
+DROP TABLE Fine;
+
+DROP TABLE Borrower;
+
+
+
+-- Create Borrower table
+
+CREATE TABLE Borrower (
+
+    Rollno NUMBER PRIMARY KEY,
+
+    Name VARCHAR2(50),
+
+    DateofIssue DATE,
+
+    NameofBook VARCHAR2(50),
+
+    Status CHAR(1)
+
+);
+
+
+
+-- Create Fine table
+
+CREATE TABLE Fine (
+
+    Roll_no NUMBER,
+
+    Date_of_Fine DATE,
+
+    Amt NUMBER(10,2)
+
+);
+
+
+
+-- Insert sample data
+
+INSERT INTO Borrower VALUES (101, 'Rahul', TO_DATE('2025-10-01', 'YYYY-MM-DD'), 'DBMS', 'I');
+
+INSERT INTO Borrower VALUES (102, 'Priya', TO_DATE('2025-09-25', 'YYYY-MM-DD'), 'Networking', 'I');
+
+INSERT INTO Borrower VALUES (103, 'Amit', TO_DATE('2025-10-25', 'YYYY-MM-DD'), 'Java', 'I');
+
+
+
+COMMIT;
+
+
+
+DECLARE
+
+    v_roll      NUMBER;
+
+    v_book      VARCHAR2(50);
+
+    v_issue_dt  DATE;
+
+    v_days      NUMBER;
+
+    v_fine_amt  NUMBER := 0;
+
+BEGIN
+
+    -- Accept input from user
+
+    v_roll := &Roll_No;
+
+    v_book := '&Book_Name';
+
+
+
+    -- Get date of issue for entered roll number and book
+
+    SELECT DateofIssue INTO v_issue_dt
+
+    FROM Borrower
+
+    WHERE Rollno = v_roll AND NameofBook = v_book;
+
+
+
+    -- Calculate number of days between issue date and today
+
+    v_days := TRUNC(SYSDATE - v_issue_dt);
+
+
+
+    -- Determine fine amount using control structure
+
+    IF v_days > 30 THEN
+
+        v_fine_amt := (v_days - 30) * 50 + (30 - 15) * 5; 
+
+        -- fine = Rs. 5/day for 15–30 + Rs. 50/day beyond 30
+
+    ELSIF v_days >= 15 THEN
+
+        v_fine_amt := (v_days - 15) * 5;
+
+    ELSE
+
+        v_fine_amt := 0;
+
+    END IF;
+
+
+
+    -- Update book status to 'R' (Returned)
+
+    UPDATE Borrower
+
+    SET Status = 'R'
+
+    WHERE Rollno = v_roll AND NameofBook = v_book;
+
+
+
+    -- If fine exists, insert record into Fine table
+
+    IF v_fine_amt > 0 THEN
+
+        INSERT INTO Fine VALUES (v_roll, SYSDATE, v_fine_amt);
+
+        DBMS_OUTPUT.PUT_LINE('Fine applied: Rs. ' || v_fine_amt);
+
+    ELSE
+
+        DBMS_OUTPUT.PUT_LINE('No fine. Returned within time.');
+
+    END IF;
+
+
+
+    COMMIT;
+
+
+
+EXCEPTION
+
+    WHEN NO_DATA_FOUND THEN
+
+        DBMS_OUTPUT.PUT_LINE('Error: Roll number or book not found.');
+
+    WHEN OTHERS THEN
+
+        DBMS_OUTPUT.PUT_LINE('An unexpected error occurred: ' || SQLERRM);
+
+END;
+
+/
+
+
+
+
+
+
+
+/* 5.Create following tables with primary and foreign key and solve the queries given below
+
+student(S_ID,name,dept_name,tot_cred) 
+
+instructor(T_ID,name,dept_name,salary) 
+
+course(course_id,title,dept_name,credits) 
+
+i. Find the average salary of instructor in those departments where the average salary is more than Rs. 42000/-. 
+
+ii. Increase the salary of each instructor in the computer department by 10%. 
+
+iii. Find the names of instructors whose names are neither ‘Amol’ nor ‘Amit’. 
+
+iv. Find the names of student which contains ‘am’ as its substring. 
+
+v. Find the name of students from computer department that “DBMS” courses they take. 
+
+*/
+
+
+
+// NOT SURE THIS IS CORRECT 
+
+
+
+-- Create database and use it
+
+CREATE DATABASE IF NOT EXISTS collegeDB;
+
+USE collegeDB;
+
+
+
+-- Drop existing tables if any
+
+DROP TABLE IF EXISTS course;
+
+DROP TABLE IF EXISTS instructor;
+
+DROP TABLE IF EXISTS student;
+
+
+
+------------------------------------------------------------
+
+-- Step 1: Create Tables
+
+------------------------------------------------------------
+
+CREATE TABLE student (
+
+    S_ID INT PRIMARY KEY,
+
+    name VARCHAR(50),
+
+    dept_name VARCHAR(50),
+
+    tot_cred INT
+
+);
+
+
+
+CREATE TABLE instructor (
+
+    T_ID INT PRIMARY KEY,
+
+    name VARCHAR(50),
+
+    dept_name VARCHAR(50),
+
+    salary DECIMAL(10,2),
+
+    UNIQUE (dept_name)  -- ✅ Needed to allow foreign key reference
+
+);
+
+
+
+CREATE TABLE course (
+
+    course_id INT PRIMARY KEY,
+
+    title VARCHAR(50),
+
+    dept_name VARCHAR(50),
+
+    credits INT,
+
+    FOREIGN KEY (dept_name) REFERENCES instructor(dept_name)
+
+);
+
+
+
+------------------------------------------------------------
+
+-- Step 2: Insert Sample Data
+
+------------------------------------------------------------
+
+INSERT INTO student VALUES
+
+(1, 'Aman', 'Computer', 120),
+
+(2, 'Amrita', 'IT', 100),
+
+(3, 'Suman', 'Computer', 110),
+
+(4, 'Ramesh', 'Mechanical', 90),
+
+(5, 'Neha', 'Computer', 105);
+
+
+
+INSERT INTO instructor VALUES
+
+(101, 'Amol', 'Computer', 40000),
+
+(102, 'Amit', 'IT', 45000),
+
+(103, 'Pooja', 'Computer', 55000),
+
+(104, 'Rahul', 'Mechanical', 38000),
+
+(105, 'Sneha', 'Electrical', 60000);
+
+
+
+INSERT INTO course VALUES
+
+(201, 'DBMS', 'Computer', 4),
+
+(202, 'Operating System', 'Computer', 3),
+
+(203, 'Networks', 'IT', 3),
+
+(204, 'Thermodynamics', 'Mechanical', 3),
+
+(205, 'Electrical Circuits', 'Electrical', 4);
+
+
+
+COMMIT;
+
+
+
+------------------------------------------------------------
+
+-- ✅ QUERY i: Average salary of instructors 
+
+--    in departments where avg salary > 42000
+
+------------------------------------------------------------
+
+SELECT dept_name, AVG(salary) AS avg_salary
+
+FROM instructor
+
+GROUP BY dept_name
+
+HAVING AVG(salary) > 42000;
+
+
+
+------------------------------------------------------------
+
+-- ✅ QUERY ii: Increase salary of instructors 
+
+--    in Computer department by 10%
+
+------------------------------------------------------------
+
+UPDATE instructor
+
+SET salary = salary * 1.10
+
+WHERE dept_name = 'Computer';
+
+
+
+SELECT * FROM instructor; -- check updated salary
+
+
+
+------------------------------------------------------------
+
+-- ✅ QUERY iii: Instructors whose names are 
+
+--    neither 'Amol' nor 'Amit'
+
+------------------------------------------------------------
+
+SELECT name
+
+FROM instructor
+
+WHERE name NOT IN ('Amol', 'Amit');
+
+
+
+------------------------------------------------------------
+
+-- ✅ QUERY iv: Students whose names contain 'am' 
+
+--    as substring (case-insensitive)
+
+------------------------------------------------------------
+
+SELECT name
+
+FROM student
+
+WHERE LOWER(name) LIKE '%am%';
+
+
+
+------------------------------------------------------------
+
+-- ✅ QUERY v: Names of students from Computer dept 
+
+--    that take 'DBMS' course
+
+------------------------------------------------------------
+
+SELECT s.name AS Student_Name, c.title AS Course
+
+FROM student s
+
+JOIN course c ON s.dept_name = c.dept_name
+
+WHERE s.dept_name = 'Computer'
+
+AND c.title = 'DBMS';
+
+
+
+/* 6.Cursors: (Implicit and Explicit Cursor). 
+Write a PL/SQL block of code using parameterized Cursor, 
+that will merge the data available in the newly created table N_RollCall 
+with the data available in the table O_RollCall. 
+If the data in the first table already exist in the second table then
+ that data should be skipped.*/ 
+
+-- PURPOSE: Create target table that will receive merged data
+CREATE TABLE O_RollCall (
+  student_id   NUMBER,
+  student_name VARCHAR2(100),
+  class_name   VARCHAR2(50),
+  roll_no      NUMBER,
+  attend_date  DATE,
+  CONSTRAINT pk_o_roll PRIMARY KEY (student_id, attend_date)
+);
+
+-- PURPOSE: Create source table containing new records
+CREATE TABLE N_RollCall (
+  student_id   NUMBER,
+  student_name VARCHAR2(100),
+  class_name   VARCHAR2(50),
+  roll_no      NUMBER,
+  attend_date  DATE
+);
+
+-- PURPOSE: Insert sample data into N_RollCall
+INSERT INTO N_RollCall VALUES (101, 'Asha Kapoor', '10A', 1, DATE '2025-11-01');
+INSERT INTO N_RollCall VALUES (102, 'Ravi Singh',  '10A', 2, DATE '2025-11-01');
+INSERT INTO N_RollCall VALUES (103, 'Meera Patel',  '10B', 3, DATE '2025-11-01');
+INSERT INTO N_RollCall VALUES (101, 'Asha Kapoor', '10A', 1, DATE '2025-11-02');
+COMMIT;
+
+-- PURPOSE: Insert one row into O_RollCall to show skipping behavior
+INSERT INTO O_RollCall VALUES (101, 'Asha Kapoor', '10A', 1, DATE '2025-11-01');
+COMMIT;
+
+-- PURPOSE: PL/SQL block to merge data using parameterized explicit cursor
+--          and implicit cursor loop; skip rows that already exist
+SET SERVEROUTPUT ON
+DECLARE
+  CURSOR c_exists(p_sid NUMBER, p_adate DATE) IS
+    SELECT 1 FROM O_RollCall
+    WHERE student_id = p_sid
+      AND attend_date = p_adate;
+
+  v_dummy NUMBER;
+BEGIN
+  FOR rec IN (SELECT student_id, student_name, class_name, roll_no, attend_date
+              FROM N_RollCall) LOOP
+
+    v_dummy := NULL;
+    OPEN c_exists(rec.student_id, rec.attend_date);
+    FETCH c_exists INTO v_dummy;
+
+    IF c_exists%FOUND THEN
+      NULL;  -- PURPOSE: Skip existing rows
+    ELSE
+      -- PURPOSE: Insert non-duplicate row
+      INSERT INTO O_RollCall (student_id, student_name, class_name, roll_no, attend_date)
+      VALUES (rec.student_id, rec.student_name, rec.class_name, rec.roll_no, rec.attend_date);
+    END IF;
+
+    CLOSE c_exists;
+  END LOOP;
+
+  COMMIT;
+  DBMS_OUTPUT.PUT_LINE('Merge complete.');
+END;
+/
+
+-- PURPOSE: View merged final output
+SELECT * FROM O_RollCall ORDER BY student_id, attend_date;
+
+
+/*7.Write a Stored Procedure namely proc_Grade for the categorization of student. 
+If marks scored by students in examination is <=1500 and marks>=990 then student will be placed
+ in distinction category if marks scored are
