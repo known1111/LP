@@ -1,0 +1,18 @@
+1. MySql 
+
+sudo mysql 
+password 
+then code
+
+2. PL/SQL
+
+sqlplus system
+password
+SET SERVEROUTPUT ON;
+CODE 
+Type / then enter
+
+3. MongoDb 
+
+mongosh
+Then Code 
